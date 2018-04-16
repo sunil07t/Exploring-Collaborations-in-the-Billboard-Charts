@@ -1,0 +1,1160 @@
+(dp0
+S'Song'
+p1
+(lp2
+S"God's Plan"
+p3
+aS'Psycho'
+p4
+aS'Perfect'
+p5
+aS'Finesse'
+p6
+aS'Havana'
+p7
+aS'Look Alive'
+p8
+aS'Meant To Be'
+p9
+aS'Rockstar'
+p10
+aS'Pray For Me'
+p11
+aS'All The Stars'
+p12
+aS'The Middle'
+p13
+aS'Stir Fry'
+p14
+aS'Let You Down'
+p15
+aS'New Rules'
+p16
+aS'Him & I'
+p17
+aS'Gummo'
+p18
+aS'Thunder'
+p19
+aS'I Fall Apart'
+p20
+aS'Love.'
+p21
+aS'Mine'
+p22
+aS'Bad At Love'
+p23
+aS'44 More'
+p24
+aS'Lights Down Low'
+p25
+aS'Never Be The Same'
+p26
+aS'Wolves'
+p27
+aS'Bartier Cardi'
+p28
+aS'How Long'
+p29
+aS"King's Dead"
+p30
+aS'Say Something'
+p31
+aS'MotorSport'
+p32
+aS'No Limit'
+p33
+aS'Feel It Still'
+p34
+aS'Young Dumb & Broke'
+p35
+aS'Marry Me'
+p36
+aS'Outside Today'
+p37
+aS'Ric Flair Drip'
+p38
+aS'Sky Walker'
+p39
+aS'You Make It Easy'
+p40
+aS'Wait'
+p41
+aS'Bodak Yellow'
+p42
+aS'Plain Jane'
+p43
+aS'New Freezer'
+p44
+aS'Whatever It Takes'
+p45
+aS'Heaven'
+p46
+aS'Sorry Not Sorry'
+p47
+aS'River'
+p48
+aS'Five More Minutes'
+p49
+aS'Good Old Days'
+p50
+aS'Broken Halos'
+p51
+aS'Dura'
+p52
+aS'Lemon'
+p53
+aS'El Farsante'
+p54
+aS'Walk It Talk It'
+p55
+aS'Pick It Up'
+p56
+aS'Plug Walk'
+p57
+aS'Friends'
+p58
+aS'Most People Are Good'
+p59
+aS'Love Lies'
+p60
+aS'Written In The Sand'
+p61
+aS'Billy'
+p62
+aS'Want You Back'
+p63
+aS'Nowadays'
+p64
+aS'Keke'
+p65
+aS'X'
+p66
+aS'Narcos'
+p67
+aS'Betrayed'
+p68
+aS'Hardaway'
+p69
+aS'Singles You Up'
+p70
+aS'All On Me'
+p71
+aS'No Smoke'
+p72
+aS'Candy Paint'
+p73
+aS'Yours'
+p74
+aS'Rondo'
+p75
+aS'You Broke Up With Me'
+p76
+aS'The Long Way'
+p77
+aS'Paramedic!'
+p78
+aS'Red Roses'
+p79
+aS'IDGAF'
+p80
+aS'Echame La Culpa'
+p81
+aS'La Modelo'
+p82
+aS'Booty'
+p83
+aS'Dark Knight Dummo'
+p84
+aS'Beautiful Trauma'
+p85
+aS'Tell Me You Love Me'
+p86
+aS'Rubbin Off The Paint'
+p87
+aS'At The Club'
+p88
+aS'This Is Me'
+p89
+aS'I Like Me Better'
+p90
+aS'Kooda'
+p91
+aS'The Ways'
+p92
+aS'When We'
+p93
+aS'Notice Me'
+p94
+aS'Corazon'
+p95
+aS'Get You'
+p96
+aS'Codeine Dreaming'
+p97
+aS"She's With Me"
+p98
+aS'Mayores'
+p99
+aS'Break Up In The End'
+p100
+aS'Make Me Feel'
+p101
+aS'Rock'
+p102
+asS'Peak'
+p103
+(lp104
+S'1'
+p105
+aS'2'
+p106
+ag105
+aS'3'
+p107
+ag105
+aS'5'
+p108
+ag106
+ag105
+aS'7'
+p109
+ag109
+aS'6'
+p110
+aS'8'
+p111
+aS'12'
+p112
+ag110
+aS'14'
+p113
+aS'12'
+p114
+aS'4'
+p115
+aS'16'
+p116
+aS'11'
+p117
+aS'11'
+p118
+ag108
+aS'22'
+p119
+aS'20'
+p120
+aS'14'
+p121
+aS'20'
+p122
+aS'14'
+p123
+aS'21'
+p124
+aS'21'
+p125
+aS'9'
+p126
+ag110
+ag115
+ag115
+aS'18'
+p127
+aS'30'
+p128
+aS'31'
+p129
+aS'13'
+p130
+aS'29'
+p131
+aS'28'
+p132
+aS'26'
+p133
+ag105
+aS'26'
+p134
+aS'42'
+p135
+aS'23'
+p136
+aS'28'
+p137
+ag110
+aS'11'
+p138
+aS'44'
+p139
+aS'48'
+p140
+aS'45'
+p141
+aS'50'
+p142
+aS'36'
+p143
+aS'49'
+p144
+aS'15'
+p145
+aS'54'
+p146
+aS'18'
+p147
+aS'28'
+p148
+aS'46'
+p149
+aS'43'
+p150
+aS'51'
+p151
+aS'50'
+p152
+aS'61'
+p153
+aS'55'
+p154
+aS'43'
+p155
+aS'49'
+p156
+aS'36'
+p157
+aS'64'
+p158
+aS'61'
+p159
+aS'50'
+p160
+aS'52'
+p161
+aS'61'
+p162
+aS'50'
+p163
+aS'49'
+p164
+aS'73'
+p165
+aS'62'
+p166
+aS'68'
+p167
+aS'65'
+p168
+aS'69'
+p169
+aS'54'
+p170
+aS'47'
+p171
+aS'52'
+p172
+aS'73'
+p173
+aS'82'
+p174
+aS'78'
+p175
+aS'53'
+p176
+aS'85'
+p177
+aS'86'
+p178
+aS'58'
+p179
+aS'76'
+p180
+aS'89'
+p181
+aS'63'
+p182
+aS'78'
+p183
+aS'52'
+p184
+aS'93'
+p185
+aS'93'
+p186
+aS'52'
+p187
+aS'81'
+p188
+aS'97'
+p189
+aS'98'
+p190
+aS'99'
+p191
+aS'95'
+p192
+asS'Date'
+p193
+(lp194
+S'2018-02-03'
+p195
+aS'2018-03-10'
+p196
+aS'2017-10-07'
+p197
+aS'2018-01-13'
+p198
+aS'2017-09-09'
+p199
+aS'2018-02-24'
+p200
+aS'2017-11-11'
+p201
+aS'2017-10-07'
+p202
+aS'2018-02-17'
+p203
+aS'2018-01-20'
+p204
+aS'2018-02-10'
+p205
+aS'2018-01-06'
+p206
+aS'2017-11-04'
+p207
+aS'2017-08-19'
+p208
+aS'2017-12-23'
+p209
+aS'2017-12-02'
+p210
+aS'2017-05-20'
+p211
+aS'2017-10-14'
+p212
+aS'2017-12-02'
+p213
+aS'2018-02-03'
+p214
+aS'2017-09-23'
+p215
+aS'2018-03-10'
+p216
+aS'2017-10-28'
+p217
+aS'2018-01-13'
+p218
+aS'2017-11-11'
+p219
+aS'2018-01-06'
+p220
+aS'2017-10-28'
+p221
+aS'2018-01-27'
+p222
+aS'2018-02-10'
+p223
+aS'2017-11-18'
+p224
+aS'2017-09-30'
+p225
+aS'2017-07-08'
+p226
+aS'2017-08-05'
+p227
+aS'2017-12-23'
+p228
+aS'2018-01-27'
+p229
+aS'2017-11-18'
+p230
+aS'2017-10-21'
+p231
+aS'2018-02-10'
+p232
+aS'2018-02-03'
+p233
+aS'2017-07-22'
+p234
+aS'2017-10-14'
+p235
+aS'2018-02-10'
+p236
+aS'2018-02-17'
+p237
+aS'2018-01-13'
+p238
+aS'2017-07-29'
+p239
+aS'2018-01-03'
+p240
+aS'2017-12-23'
+p241
+aS'2017-11-18'
+p242
+aS'2018-01-13'
+p243
+aS'2018-02-17'
+p244
+aS'2017-11-25'
+p245
+aS'2018-02-10'
+p246
+aS'2018-02-10'
+p247
+aS'2017-12-02'
+p248
+aS'2018-02-24'
+p249
+aS'2018-02-24'
+p250
+aS'2018-02-10'
+p251
+aS'2018-03-03'
+p252
+aS'2017-12-09'
+p253
+aS'2018-03-10'
+p254
+aS'2018-03-10'
+p255
+aS'2018-01-20'
+p256
+aS'2018-01-27'
+p257
+aS'2018-02-24'
+p258
+aS'2018-02-10'
+p259
+aS'2017-12-02'
+p260
+aS'2018-02-17'
+p261
+aS'2018-02-17'
+p262
+aS'2018-01-13'
+p263
+aS'2017-12-30'
+p264
+aS'2017-11-11'
+p265
+aS'2017-11-04'
+p266
+aS'2018-03-10'
+p267
+aS'2017-11-18'
+p268
+aS'2018-02-17'
+p269
+aS'2018-02-24'
+p270
+aS'2018-01-20'
+p271
+aS'2018-01-27'
+p272
+aS'2017-12-09'
+p273
+aS'2018-01-06'
+p274
+aS'2018-03-10'
+p275
+aS'2018-03-10'
+p276
+aS'2018-01-20'
+p277
+aS'2017-12-23'
+p278
+aS'2018-03-03'
+p279
+aS'2018-02-17'
+p280
+aS'2018-01-13'
+p281
+aS'2018-02-24'
+p282
+aS'2018-03-10'
+p283
+aS'2018-02-24'
+p284
+aS'2018-02-24'
+p285
+aS'2018-02-10'
+p286
+aS'2018-03-03'
+p287
+aS'2018-03-03'
+p288
+aS'2017-12-16'
+p289
+aS'2018-03-10'
+p290
+aS'2018-03-03'
+p291
+aS'2018-03-10'
+p292
+aS'2018-03-10'
+p293
+aS'2018-02-17'
+p294
+asS'Entry'
+p295
+(lp296
+g105
+ag106
+aS'89'
+p297
+aS'35'
+p298
+aS'94'
+p299
+ag110
+aS'61'
+p300
+ag106
+ag109
+aS'43'
+p301
+aS'23'
+p302
+aS'94'
+p303
+aS'87'
+p304
+aS'90'
+p305
+aS'21'
+p306
+aS'58'
+p307
+aS'70'
+p308
+aS'65'
+p309
+aS'41'
+p310
+aS'56'
+p311
+aS'81'
+p312
+aS'22'
+p313
+aS'95'
+p314
+aS'71'
+p315
+aS'88'
+p316
+aS'14'
+p317
+aS'60'
+p318
+aS'91'
+p319
+ag126
+aS'14'
+p320
+aS'85'
+p321
+aS'89'
+p322
+aS'91'
+p323
+aS'97'
+p324
+aS'71'
+p325
+aS'71'
+p326
+aS'96'
+p327
+aS'28'
+p328
+aS'88'
+p329
+aS'85'
+p330
+aS'98'
+p331
+aS'75'
+p332
+aS'87'
+p333
+aS'82'
+p334
+aS'52'
+p335
+aS'11'
+p336
+aS'98'
+p337
+aS'72'
+p338
+aS'91'
+p339
+aS'81'
+p340
+aS'65'
+p341
+aS'92'
+p342
+aS'18'
+p343
+aS'97'
+p344
+aS'62'
+p345
+aS'72'
+p346
+aS'94'
+p347
+aS'43'
+p348
+aS'99'
+p349
+aS'60'
+p350
+aS'61'
+p351
+aS'85'
+p352
+aS'64'
+p353
+aS'49'
+p354
+aS'36'
+p355
+aS'93'
+p356
+aS'90'
+p357
+aS'94'
+p358
+aS'87'
+p359
+aS'93'
+p360
+aS'84'
+p361
+aS'84'
+p362
+aS'73'
+p363
+aS'91'
+p364
+aS'93'
+p365
+aS'67'
+p366
+aS'98'
+p367
+aS'92'
+p368
+aS'47'
+p369
+aS'52'
+p370
+aS'81'
+p371
+aS'82'
+p372
+aS'95'
+p373
+aS'53'
+p374
+aS'97'
+p375
+aS'92'
+p376
+aS'83'
+p377
+aS'96'
+p378
+aS'89'
+p379
+aS'63'
+p380
+aS'97'
+p381
+aS'52'
+p382
+aS'94'
+p383
+aS'93'
+p384
+aS'52'
+p385
+aS'96'
+p386
+aS'100'
+p387
+aS'98'
+p388
+aS'99'
+p389
+aS'99'
+p390
+asS'Weeks'
+p391
+(lp392
+S'10'
+p393
+ag108
+aS'28'
+p394
+aS'13'
+p395
+aS'32'
+p396
+ag109
+aS'23'
+p397
+aS'28'
+p398
+ag111
+aS'12'
+p399
+ag126
+aS'14'
+p400
+aS'24'
+p401
+aS'35'
+p402
+aS'17'
+p403
+aS'20'
+p404
+aS'48'
+p405
+aS'27'
+p406
+aS'20'
+p407
+aS'10'
+p408
+aS'30'
+p409
+ag108
+aS'25'
+p410
+aS'13'
+p411
+aS'23'
+p412
+aS'14'
+p413
+aS'24'
+p414
+aS'11'
+p415
+ag126
+aS'22'
+p416
+aS'29'
+p417
+aS'41'
+p418
+aS'36'
+p419
+aS'17'
+p420
+aS'11'
+p421
+aS'22'
+p422
+aS'25'
+p423
+ag126
+aS'10'
+p424
+aS'35'
+p425
+aS'25'
+p426
+ag126
+ag111
+aS'13'
+p427
+aS'36'
+p428
+aS'13'
+p429
+aS'17'
+p430
+aS'19'
+p431
+aS'13'
+p432
+ag111
+aS'21'
+p433
+ag126
+ag126
+aS'20'
+p434
+ag109
+ag109
+ag126
+ag110
+aS'19'
+p435
+ag108
+ag105
+aS'12'
+p436
+ag111
+ag108
+ag126
+aS'20'
+p437
+ag111
+ag111
+aS'13'
+p438
+aS'16'
+p439
+aS'20'
+p440
+aS'20'
+p441
+ag105
+aS'18'
+p442
+ag111
+ag115
+aS'12'
+p443
+aS'11'
+p444
+aS'19'
+p445
+aS'11'
+p446
+ag108
+ag108
+aS'12'
+p447
+aS'17'
+p448
+ag107
+ag109
+aS'11'
+p449
+ag109
+ag105
+ag107
+ag109
+ag108
+ag107
+ag107
+aS'14'
+p450
+ag108
+ag106
+ag105
+ag105
+ag115
+asS'Arists'
+p451
+(lp452
+S'DRAKE'
+p453
+aS'POST MALONE featuring TY DOLLA $IGN'
+p454
+aS'ED SHEERAN'
+p455
+aS'BRUNO MARS & CARDI B'
+p456
+aS'CAMILA CABELLO featuring YOUNG THUG'
+p457
+aS'BLOCBOY JB featuring DRAKE'
+p458
+aS'BEBE REXHA & FLORIDA GEORGIA LINE'
+p459
+aS'POST MALONE featuring 21 SAVAGE'
+p460
+aS'THE WEEKND & KENDRICK LAMAR'
+p461
+aS'KENDRICK LAMAR & SZA'
+p462
+aS'ZEDD, MAREN MORRIS & GREY'
+p463
+aS'MIGOS'
+p464
+aS'NF'
+p465
+aS'DUA LIPA'
+p466
+aS'G-EAZY & HALSEY'
+p467
+aS'6IX9INE'
+p468
+aS'IMAGINE DRAGONS'
+p469
+aS'POST MALONE'
+p470
+aS'KENDRICK LAMAR featuring ZACARI'
+p471
+aS'BAZZI'
+p472
+aS'HALSEY'
+p473
+aS'LOGIC'
+p474
+aS'MAX featuring GNASH'
+p475
+aS'CAMILA CABELLO'
+p476
+aS'SELENA GOMEZ x MARSHMELLO'
+p477
+aS'CARDI B featuring 21 SAVAGE'
+p478
+aS'CHARLIE PUTH'
+p479
+aS'JAY ROCK, KENDRICK LAMAR, FUTURE & JAMES BLAKE'
+p480
+aS'JUSTIN TIMBERLAKE featuring CHRIS STAPLETON'
+p481
+aS'MIGOS, NICKI MINAJ & CARDI B'
+p482
+aS'G-EAZY featuring A$AP ROCKY & CARDI B'
+p483
+aS'PORTUGAL. THE MAN'
+p484
+aS'KHALID'
+p485
+aS'THOMAS RHETT'
+p486
+aS'YOUNGBOY NEVER BROKE AGAIN'
+p487
+aS'OFFSET & METRO BOOMIN'
+p488
+aS'MIGUEL featuring TRAVIS SCOTT'
+p489
+aS'JASON ALDEAN'
+p490
+aS'MAROON 5'
+p491
+aS'CARDI B'
+p492
+aS'A$AP FERG'
+p493
+aS'RICH THE KID featuring KENDRICK LAMAR'
+p494
+aS'IMAGINE DRAGONS'
+p495
+aS'KANE BROWN'
+p496
+aS'DEMI LOVATO'
+p497
+aS'EMINEM featuring ED SHEERAN'
+p498
+aS'SCOTTY McCREERY'
+p499
+aS'MACKLEMORE featuring KESHA'
+p500
+aS'CHRIS STAPLETON'
+p501
+aS'DADDY YANKEE'
+p502
+aS'N*E*R*D & RIHANNA'
+p503
+aS'OZUNA'
+p504
+aS'MIGOS featuring DRAKE'
+p505
+aS'FAMOUS DEX featuring A$AP ROCKY'
+p506
+aS'RICH THE KID'
+p507
+aS'MARSHMELLO & ANNE-MARIE'
+p508
+aS'LUKE BRYAN'
+p509
+aS'KHALID & NORMANI'
+p510
+aS'OLD DOMINION'
+p511
+aS'6IX9INE'
+p512
+aS'5 SECONDS OF SUMMER'
+p513
+aS'LIL SKIES featuring LANDON CURE'
+p514
+aS'6IX9INE, FETTY WAP & A BOOGIE WIT DA HOODIE'
+p515
+aS'SCHOOLBOY Q, 2 CHAINZ & SAUDI'
+p516
+aS'MIGOS'
+p517
+aS'LIL XAN'
+p518
+aS"DEREZ DE'SHON"
+p519
+aS'JORDAN DAVIS'
+p520
+aS'DEVIN DAWSON'
+p521
+aS'YOUNGBOY NEVER BROKE AGAIN'
+p522
+aS'POST MALONE'
+p523
+aS'RUSSELL DICKERSON'
+p524
+aS'6IX9INE featuring TORY LANEZ & YOUNG THUG'
+p525
+aS'WALKER HAYES'
+p526
+aS'BRETT ELDREDGE'
+p527
+aS'SOB x RBE'
+p528
+aS'LIL SKIES featuring LANDON CURE'
+p529
+aS'DUA LIPA'
+p530
+aS'LUIS FONSI & DEMI LOVATO'
+p531
+aS'OZUNA x CARDI B'
+p532
+aS'BLAC YOUNGSTA'
+p533
+aS'TRIPPIE REDD featuring TRAVIS SCOTT'
+p534
+aS'P!NK'
+p535
+aS'DEMI LOVATO'
+p536
+aS'YBN NAHMIR'
+p537
+aS'JACQUEES x DEJ LOAF'
+p538
+aS'KEALA SETTLE & THE GREATEST SHOWMAN ENSEMBLE'
+p539
+aS'LAUV'
+p540
+aS'6IX9INE'
+p541
+aS'KHALID & SWAE LEE'
+p542
+aS'TANK'
+p543
+aS'MIGOS featuring POST MALONE'
+p544
+aS'MALUMA x NEGO DO BOREL'
+p545
+aS'DANIEL CAESAR featuring KALI UCHIS'
+p546
+aS'KODAK BLACK featuring LIL WAYNE'
+p547
+aS'HIGH VALLEY'
+p548
+aS'BECKY G featuring BAD BUNNY'
+p549
+aS'COLE SWINDELL'
+p550
+aS'JANELLE MONAE'
+p551
+aS'PLIES'
+p552
+as.
