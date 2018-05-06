@@ -1,0 +1,915 @@
+
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-gl-0.12.15.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.20/require.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript"></script>
+<script type="text/javascript">function HoloViewsWidget() {
+}
+
+HoloViewsWidget.prototype.init_slider = function(init_val){
+  if(this.load_json) {
+    this.from_json()
+  } else {
+    this.update_cache();
+  }
+}
+
+HoloViewsWidget.prototype.populate_cache = function(idx){
+  this.cache[idx].innerHTML = this.frames[idx];
+  if (this.embed) {
+    delete this.frames[idx];
+  }
+}
+
+HoloViewsWidget.prototype.process_error = function(msg){
+}
+
+HoloViewsWidget.prototype.from_json = function() {
+  var data_url = this.json_path + this.id + '.json';
+  $.getJSON(data_url, $.proxy(function(json_data) {
+    this.frames = json_data;
+    this.update_cache();
+    this.update(0);
+  }, this));
+}
+
+HoloViewsWidget.prototype.dynamic_update = function(current){
+  if (current === undefined) {
+    return
+  }
+  this.current = current;
+  if (this.comm) {
+    var msg = {comm_id: this.id+'_client', content: current}
+    this.comm.send(msg);
+  }
+}
+
+HoloViewsWidget.prototype.update_cache = function(force){
+  var frame_len = Object.keys(this.frames).length;
+  for (var i=0; i<frame_len; i++) {
+    if(!this.load_json || this.dynamic)  {
+      var frame = Object.keys(this.frames)[i];
+    } else {
+      var frame = i;
+    }
+    if(!(frame in this.cache) || force) {
+      if ((frame in this.cache) && force) { this.cache[frame].remove() }
+      var div = document.createElement("div");
+      var parent = document.getElementById("_anim_img"+this.id);
+      div.style.display = "none";
+      parent.appendChild(div)
+      this.cache[frame] = div;
+      var cache_id = "_anim_img"+this.id+"_"+frame;
+      this.populate_cache(frame);
+    }
+  }
+}
+
+HoloViewsWidget.prototype.update = function(current){
+  if(current in this.cache) {
+    for (var index in this.cache) {
+      this.cache[index].style.display = "none";
+    }
+    this.cache[current].style.display = "";
+    this.wait = false;
+  }
+}
+
+HoloViewsWidget.prototype.init_comms = function() {
+  var that = this
+  HoloViews.comm_manager.register_target(this.plot_id, this.id, function (msg) { that.process_msg(msg) })
+  if (!this.cached || this.dynamic) {
+    function ack_callback(msg) {
+      msg = JSON.parse(msg.content.data);
+      var comm_id = msg["comm_id"]
+      var comm_status = HoloViews.comm_status[comm_id];
+      if (that.queue.length > 0) {
+        that.time = Date.now();
+        that.dynamic_update(that.queue[that.queue.length-1]);
+        that.queue = [];
+      } else {
+        that.wait = false;
+      }
+      if ((msg.msg_type == "Ready") && msg.content) {
+        console.log("Python callback returned following output:", msg.content);
+      } else if (msg.msg_type == "Error") {
+        console.log("Python failed with the following traceback:", msg['traceback'])
+      }
+    }
+    var comm = HoloViews.comm_manager.get_client_comm(this.plot_id, this.id+'_client', ack_callback);
+    return comm
+  }
+}
+
+HoloViewsWidget.prototype.process_msg = function(msg) {
+}
+
+function SelectionWidget(frames, id, slider_ids, keyMap, dim_vals, notFound, load_json, mode, cached, json_path, dynamic, plot_id){
+  this.frames = frames;
+  this.id = id;
+  this.plot_id = plot_id;
+  this.slider_ids = slider_ids;
+  this.keyMap = keyMap
+  this.current_frame = 0;
+  this.current_vals = dim_vals;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.notFound = notFound;
+  this.cached = cached;
+  this.dynamic = dynamic;
+  this.cache = {};
+  this.json_path = json_path;
+  this.init_slider(this.current_vals[0]);
+  this.queue = [];
+  this.wait = false;
+  if (!this.cached || this.dynamic) {
+    this.comm = this.init_comms();
+  }
+}
+
+SelectionWidget.prototype = new HoloViewsWidget;
+
+
+SelectionWidget.prototype.get_key = function(current_vals) {
+  var key = "(";
+  for (var i=0; i<this.slider_ids.length; i++)
+  {
+    var val = this.current_vals[i];
+    if (!(typeof val === 'string')) {
+      if (val % 1 === 0) { val = val.toFixed(1); }
+      else { val = val.toFixed(10); val = val.slice(0, val.length-1);}
+    }
+    key += "'" + val + "'";
+    if(i != this.slider_ids.length-1) { key += ', ';}
+    else if(this.slider_ids.length == 1) { key += ',';}
+  }
+  key += ")";
+  return this.keyMap[key];
+}
+
+SelectionWidget.prototype.set_frame = function(dim_val, dim_idx){
+  this.current_vals[dim_idx] = dim_val;
+  var key = this.current_vals;
+  if (!this.dynamic) {
+    key = this.get_key(key)
+  }
+  if (this.dynamic || !this.cached) {
+    if ((this.time !== undefined) && ((this.wait) && ((this.time + 10000) > Date.now()))) {
+      this.queue.push(key);
+      return
+    }
+    this.queue = [];
+    this.time = Date.now();
+    this.current_frame = key;
+    this.wait = true;
+    this.dynamic_update(key)
+  } else if (key !== undefined) {
+    this.update(key)
+  }
+}
+
+
+/* Define the ScrubberWidget class */
+function ScrubberWidget(frames, num_frames, id, interval, load_json, mode, cached, json_path, dynamic, plot_id){
+  this.slider_id = "_anim_slider" + id;
+  this.loop_select_id = "_anim_loop_select" + id;
+  this.id = id;
+  this.plot_id = plot_id;
+  this.interval = interval;
+  this.current_frame = 0;
+  this.direction = 0;
+  this.dynamic = dynamic;
+  this.timer = null;
+  this.load_json = load_json;
+  this.mode = mode;
+  this.cached = cached;
+  this.frames = frames;
+  this.cache = {};
+  this.length = num_frames;
+  this.json_path = json_path;
+  document.getElementById(this.slider_id).max = this.length - 1;
+  this.init_slider(0);
+  this.wait = false;
+  this.queue = [];
+  if (!this.cached || this.dynamic) {
+    this.comm = this.init_comms()
+  }
+}
+
+ScrubberWidget.prototype = new HoloViewsWidget;
+
+ScrubberWidget.prototype.set_frame = function(frame){
+  this.current_frame = frame;
+  var widget = document.getElementById(this.slider_id);
+  if (widget === null) {
+    this.pause_animation();
+    return
+  }
+  widget.value = this.current_frame;
+  if(this.cached) {
+    this.update(frame)
+  } else {
+    this.dynamic_update(frame)
+  }
+}
+
+
+ScrubberWidget.prototype.get_loop_state = function(){
+  var button_group = document[this.loop_select_id].state;
+  for (var i = 0; i < button_group.length; i++) {
+    var button = button_group[i];
+    if (button.checked) {
+      return button.value;
+    }
+  }
+  return undefined;
+}
+
+
+ScrubberWidget.prototype.next_frame = function() {
+  this.set_frame(Math.min(this.length - 1, this.current_frame + 1));
+}
+
+ScrubberWidget.prototype.previous_frame = function() {
+  this.set_frame(Math.max(0, this.current_frame - 1));
+}
+
+ScrubberWidget.prototype.first_frame = function() {
+  this.set_frame(0);
+}
+
+ScrubberWidget.prototype.last_frame = function() {
+  this.set_frame(this.length - 1);
+}
+
+ScrubberWidget.prototype.slower = function() {
+  this.interval /= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.faster = function() {
+  this.interval *= 0.7;
+  if(this.direction > 0){this.play_animation();}
+  else if(this.direction < 0){this.reverse_animation();}
+}
+
+ScrubberWidget.prototype.anim_step_forward = function() {
+  if(this.current_frame < this.length - 1){
+    this.next_frame();
+  }else{
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.first_frame();
+    }else if(loop_state == "reflect"){
+      this.last_frame();
+      this.reverse_animation();
+    }else{
+      this.pause_animation();
+      this.last_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.anim_step_reverse = function() {
+  if(this.current_frame > 0){
+    this.previous_frame();
+  } else {
+    var loop_state = this.get_loop_state();
+    if(loop_state == "loop"){
+      this.last_frame();
+    }else if(loop_state == "reflect"){
+      this.first_frame();
+      this.play_animation();
+    }else{
+      this.pause_animation();
+      this.first_frame();
+    }
+  }
+}
+
+ScrubberWidget.prototype.pause_animation = function() {
+  this.direction = 0;
+  if (this.timer){
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+}
+
+ScrubberWidget.prototype.play_animation = function() {
+  this.pause_animation();
+  this.direction = 1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_forward();}, this.interval);
+}
+
+ScrubberWidget.prototype.reverse_animation = function() {
+  this.pause_animation();
+  this.direction = -1;
+  var t = this;
+  if (!this.timer) this.timer = setInterval(function(){t.anim_step_reverse();}, this.interval);
+}
+
+function extend(destination, source) {
+  for (var k in source) {
+    if (source.hasOwnProperty(k)) {
+      destination[k] = source[k];
+    }
+  }
+  return destination;
+}
+
+function update_widget(widget, values) {
+  if (widget.hasClass("ui-slider")) {
+    widget.slider('option', {
+      min: 0,
+      max: values.length-1,
+      dim_vals: values,
+      value: 0,
+      dim_labels: values
+    })
+    widget.slider('option', 'slide').call(widget, event, {value: 0})
+  } else {
+    widget.empty();
+    for (var i=0; i<values.length; i++){
+      widget.append($("<option>", {
+        value: i,
+        text: values[i]
+      }))
+    };
+    widget.data('values', values);
+    widget.data('value', 0);
+    widget.trigger("change");
+  };
+}
+
+function init_slider(id, plot_id, dim, values, next_vals, labels, dynamic, step, value, next_dim,
+                     dim_idx, delay, jQueryUI_CDN, UNDERSCORE_CDN) {
+  // Slider JS Block START
+  function loadcssfile(filename){
+    var fileref=document.createElement("link")
+    fileref.setAttribute("rel", "stylesheet")
+    fileref.setAttribute("type", "text/css")
+    fileref.setAttribute("href", filename)
+    document.getElementsByTagName("head")[0].appendChild(fileref)
+  }
+  loadcssfile("https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css");
+  /* Check if jQuery and jQueryUI have been loaded
+     otherwise load with require.js */
+  var jQuery = window.jQuery,
+    // check for old versions of jQuery
+    oldjQuery = jQuery && !!jQuery.fn.jquery.match(/^1\.[0-4](\.|$)/),
+    jquery_path = '',
+    paths = {},
+    noConflict;
+  var jQueryUI = jQuery.ui;
+  // check for jQuery
+  if (!jQuery || oldjQuery) {
+    // load if it's not available or doesn't meet min standards
+    paths.jQuery = jQuery;
+    noConflict = !!oldjQuery;
+  } else {
+    // register the current jQuery
+    define('jquery', [], function() { return jQuery; });
+  }
+  if (!jQueryUI) {
+    paths.jQueryUI = jQueryUI_CDN.slice(null, -3);
+  } else {
+    define('jQueryUI', [], function() { return jQuery.ui; });
+  }
+  paths.underscore = UNDERSCORE_CDN.slice(null, -3);
+  var jquery_require = {
+    paths: paths,
+    shim: {
+      "jQueryUI": {
+        exports:"$",
+        deps: ['jquery']
+      },
+      "underscore": {
+        exports: '_'
+      }
+    }
+  }
+  require.config(jquery_require);
+  require(["jQueryUI", "underscore"], function(jUI, _){
+    if (noConflict) $.noConflict(true);
+    var vals = values;
+    if (dynamic && vals.constructor === Array) {
+      var default_value = parseFloat(value);
+      var min = parseFloat(vals[0]);
+      var max = parseFloat(vals[vals.length-1]);
+      var wstep = step;
+      var wlabels = [default_value];
+      var init_label = default_value;
+    } else {
+      var min = 0;
+      if (dynamic) {
+        var max = Object.keys(vals).length - 1;
+        var init_label = labels[value];
+        var default_value = values[value];
+      } else {
+        var max = vals.length - 1;
+        var init_label = labels[value];
+        var default_value = value;
+      }
+      var wstep = 1;
+      var wlabels = labels;
+    }
+    function adjustFontSize(text) {
+      var width_ratio = (text.parent().width()/8)/text.val().length;
+      var size = Math.min(0.9, Math.max(0.6, width_ratio))+'em';
+      text.css('font-size', size);
+    }
+    var slider = $('#_anim_widget'+id+'_'+dim);
+    slider.slider({
+      animate: "fast",
+      min: min,
+      max: max,
+      step: wstep,
+      value: default_value,
+      dim_vals: vals,
+      dim_labels: wlabels,
+      next_vals: next_vals,
+      slide: function(event, ui) {
+        var vals = slider.slider("option", "dim_vals");
+        var next_vals = slider.slider("option", "next_vals");
+        var dlabels = slider.slider("option", "dim_labels");
+        if (dynamic) {
+          var dim_val = ui.value;
+          if (vals.constructor === Array) {
+            var label = ui.value;
+          } else {
+            var label = dlabels[ui.value];
+          }
+        } else {
+          var dim_val = vals[ui.value];
+          var label = dlabels[ui.value];
+        }
+        var text = $('#textInput'+id+'_'+dim);
+        text.val(label);
+        adjustFontSize(text);
+        HoloViews.index[plot_id].set_frame(dim_val, dim_idx);
+        if (Object.keys(next_vals).length > 0) {
+          var new_vals = next_vals[dim_val];
+          var next_widget = $('#_anim_widget'+id+'_'+next_dim);
+          update_widget(next_widget, new_vals);
+        }
+      }
+    });
+    slider.keypress(function(event) {
+      if (event.which == 80 || event.which == 112) {
+        var start = slider.slider("option", "value");
+        var stop =  slider.slider("option", "max");
+        for (var i=start; i<=stop; i++) {
+          var delay = i*delay;
+          $.proxy(function doSetTimeout(i) { setTimeout($.proxy(function() {
+            var val = {value:i};
+            slider.slider('value',i);
+            slider.slider("option", "slide")(null, val);
+          }, slider), delay);}, slider)(i);
+        }
+      }
+      if (event.which == 82 || event.which == 114) {
+        var start = slider.slider("option", "value");
+        var stop =  slider.slider("option", "min");
+        var count = 0;
+        for (var i=start; i>=stop; i--) {
+          var delay = count*delay;
+          count = count + 1;
+          $.proxy(function doSetTimeout(i) { setTimeout($.proxy(function() {
+            var val = {value:i};
+            slider.slider('value',i);
+            slider.slider("option", "slide")(null, val);
+          }, slider), delay);}, slider)(i);
+        }
+      }
+    });
+    var textInput = $('#textInput'+id+'_'+dim)
+    textInput.val(init_label);
+    adjustFontSize(textInput);
+  });
+}
+
+function init_dropdown(id, plot_id, dim, vals, value, next_vals, labels, next_dim, dim_idx, dynamic) {
+  var widget = $("#_anim_widget"+id+'_'+dim);
+  widget.data('values', vals)
+  for (var i=0; i<vals.length; i++){
+    if (dynamic) {
+      var val = vals[i];
+    } else {
+      var val = i;
+    }
+    widget.append($("<option>", {
+      value: val,
+      text: labels[i]
+    }));
+  };
+  widget.data("next_vals", next_vals);
+  widget.val(value);
+  widget.on('change', function(event, ui) {
+    if (dynamic) {
+      var dim_val = parseInt(this.value);
+    } else {
+      var dim_val = $.data(this, 'values')[this.value];
+    }
+    var next_vals = $.data(this, "next_vals");
+    if (Object.keys(next_vals).length > 0) {
+      var new_vals = next_vals[dim_val];
+      var next_widget = $('#_anim_widget'+id+'_'+next_dim);
+      update_widget(next_widget, new_vals);
+    }
+    var widgets = HoloViews.index[plot_id]
+    if (widgets) {
+      widgets.set_frame(dim_val, dim_idx);
+    }
+  });
+}
+
+if (window.HoloViews === undefined) {
+  window.HoloViews = {}
+}
+
+var _namespace = {
+  init_slider: init_slider,
+  init_dropdown: init_dropdown,
+  comms: {},
+  comm_status: {},
+  index: {},
+  plot_index: {},
+  kernels: {},
+  receivers: {}
+}
+
+for (var k in _namespace) {
+  if (!(k in window.HoloViews)) {
+    window.HoloViews[k] = _namespace[k];
+  }
+}
+
+var JS_MIME_TYPE = 'application/javascript';
+var HTML_MIME_TYPE = 'text/html';
+var EXEC_MIME_TYPE = 'application/vnd.holoviews_exec.v0+json';
+var CLASS_NAME = 'output';
+
+/**
+ * Render data to the DOM node
+ */
+function render(props, node) {
+  var div = document.createElement("div");
+  var script = document.createElement("script");
+  node.appendChild(div);
+  node.appendChild(script);
+}
+
+/**
+ * Handle when a new output is added
+ */
+function handle_add_output(event, handle) {
+  var output_area = handle.output_area;
+  var output = handle.output;
+  if (!output.data.hasOwnProperty(EXEC_MIME_TYPE)) {
+    return
+  }
+  var id = output.metadata[EXEC_MIME_TYPE]["id"];
+  var toinsert = output_area.element.find("." + CLASS_NAME.split(' ')[0]);
+  if (id !== undefined) {
+    toinsert[0].children[0].innerHTML = output.data[HTML_MIME_TYPE];
+    toinsert[0].children[1].textContent = output.data[JS_MIME_TYPE];
+    output_area._hv_plot_id = id;
+    if ((window.Bokeh !== undefined) && (id in Bokeh.index)) {
+      HoloViews.plot_index[id] = Bokeh.index[id];
+    } else {
+      HoloViews.plot_index[id] = null;
+    }
+  }
+}
+
+/**
+ * Handle when an output is cleared or removed
+ */
+function handle_clear_output(event, handle) {
+  var id = handle.cell.output_area._hv_plot_id;
+  if ((id === undefined) || !(id in HoloViews.plot_index)) { return; }
+  var comm = window.HoloViews.comm_manager.get_client_comm("hv-extension-comm", "hv-extension-comm", function () {});
+  if (comm !== null) {
+    comm.send({event_type: 'delete', 'id': id});
+  }
+  delete HoloViews.plot_index[id];
+  if ((window.Bokeh !== undefined) & (id in window.Bokeh.index)) {
+    window.Bokeh.index[id].model.document.clear();
+    delete Bokeh.index[id];
+  }
+}
+
+/**
+ * Handle kernel restart event
+ */
+function handle_kernel_cleanup(event, handle) {
+  delete HoloViews.comms["hv-extension-comm"];
+  window.HoloViews.plot_index = {}
+}
+
+/**
+ * Handle update_display_data messages
+ */
+function handle_update_output(event, handle) {
+  handle_clear_output(event, {cell: {output_area: handle.output_area}})
+  handle_add_output(event, handle)
+}
+
+function register_renderer(events, OutputArea) {
+  function append_mime(data, metadata, element) {
+    // create a DOM node to render to
+    var toinsert = this.create_output_subarea(
+    metadata,
+    CLASS_NAME,
+    EXEC_MIME_TYPE
+    );
+    this.keyboard_manager.register_events(toinsert);
+    // Render to node
+    var props = {data: data, metadata: metadata[EXEC_MIME_TYPE]};
+    render(props, toinsert[0]);
+    element.append(toinsert);
+    return toinsert
+  }
+
+  events.on('output_added.OutputArea', handle_add_output);	
+  events.on('output_updated.OutputArea', handle_update_output);
+  events.on('clear_output.CodeCell', handle_clear_output);
+  events.on('delete.Cell', handle_clear_output);
+  events.on('kernel_ready.Kernel', handle_kernel_cleanup);
+
+  OutputArea.prototype.register_mime_type(EXEC_MIME_TYPE, append_mime, {
+    safe: true,
+    index: 0
+  });
+}
+
+if (window.Jupyter !== undefined) {
+  try {
+    var events = require('base/js/events');
+    var OutputArea = require('notebook/js/outputarea').OutputArea;
+    if (OutputArea.prototype.mime_types().indexOf(EXEC_MIME_TYPE) == -1) {
+      register_renderer(events, OutputArea);
+    }
+  } catch(err) {
+  }
+}
+
+// Define Bokeh specific subclasses
+function BokehSelectionWidget() {
+  SelectionWidget.apply(this, arguments);
+}
+
+function BokehScrubberWidget() {
+  ScrubberWidget.apply(this, arguments);
+}
+
+// Let them inherit from the baseclasses
+BokehSelectionWidget.prototype = Object.create(SelectionWidget.prototype);
+BokehScrubberWidget.prototype = Object.create(ScrubberWidget.prototype);
+
+// Define methods to override on widgets
+var BokehMethods = {
+  update_cache : function(){
+    for (var index in this.frames) {
+      this.frames[index] = JSON.parse(this.frames[index]);
+    }
+  },
+  update : function(current){
+    if (current === undefined) {
+      return;
+    }
+    var data = this.frames[current];
+    if (data !== undefined) {
+      if (data.root in HoloViews.plot_index) {
+        var doc = HoloViews.plot_index[data.root].model.document;
+      } else {
+        var doc = Bokeh.index[data.root].model.document;
+      }
+      doc.apply_json_patch(data.content);
+    }
+  },
+  init_comms: function() {
+    if (Bokeh.protocol !== undefined) {
+      this.receiver = new Bokeh.protocol.Receiver()
+    } else {
+      this.receiver = null;
+    }
+    return HoloViewsWidget.prototype.init_comms.call(this);
+  },
+  process_msg : function(msg) {
+    if (this.plot_id in HoloViews.plot_index) {
+      var doc = HoloViews.plot_index[this.plot_id].model.document;
+    } else {
+      var doc = Bokeh.index[this.plot_id].model.document;
+    }
+    if (this.receiver === null) { return }
+    var receiver = this.receiver;
+    if (msg.buffers.length > 0) {
+      receiver.consume(msg.buffers[0].buffer)
+    } else {
+      receiver.consume(msg.content.data)
+    }
+    const comm_msg = receiver.message;
+    if ((comm_msg != null) && (doc != null)) {
+      doc.apply_json_patch(comm_msg.content, comm_msg.buffers)
+    }
+  }
+}
+
+// Extend Bokeh widgets with backend specific methods
+extend(BokehSelectionWidget.prototype, BokehMethods);
+extend(BokehScrubberWidget.prototype, BokehMethods);
+
+window.HoloViews.BokehSelectionWidget = BokehSelectionWidget
+window.HoloViews.BokehScrubberWidget = BokehScrubberWidget
+</script>
+<script type="text/javascript">
+    function JupyterCommManager() {
+    }
+
+    JupyterCommManager.prototype.register_target = function(plot_id, comm_id, msg_handler) {
+      if (window.comm_manager || ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null))) {
+        var comm_manager = window.comm_manager || Jupyter.notebook.kernel.comm_manager;
+        comm_manager.register_target(comm_id, function(comm) {
+          comm.on_msg(msg_handler);
+        });
+      } else if ((plot_id in HoloViews.kernels) && (HoloViews.kernels[plot_id])) {
+        HoloViews.kernels[plot_id].registerCommTarget(comm_id, function(comm) {
+          comm.onMsg = msg_handler;
+        });
+      }
+    }
+
+    JupyterCommManager.prototype.get_client_comm = function(plot_id, comm_id, msg_handler) {
+      if (comm_id in window.HoloViews.comms) {
+        return HoloViews.comms[comm_id];
+      } else if (window.comm_manager || ((window.Jupyter !== undefined) && (Jupyter.notebook.kernel != null))) {
+        var comm_manager = window.comm_manager || Jupyter.notebook.kernel.comm_manager;
+        var comm = comm_manager.new_comm(comm_id, {}, {}, {}, comm_id);
+        if (msg_handler) {
+          comm.on_msg(msg_handler);
+        }
+      } else if ((plot_id in HoloViews.kernels) && (HoloViews.kernels[plot_id])) {
+        var comm = HoloViews.kernels[plot_id].connectToComm(comm_id);
+        comm.open();
+        if (msg_handler) {
+          comm.onMsg = msg_handler;
+        }
+      }
+      HoloViews.comms[comm_id] = comm;
+      return comm;
+    }
+
+    window.HoloViews.comm_manager = new JupyterCommManager();
+    </script>
+
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.min.css">
+<link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+<style>div.hololayout {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+div.holoframe {
+  width: 75%;
+}
+
+div.holowell {
+  display: flex;
+  align-items: center;
+}
+
+form.holoform {
+  background-color: #fafafa;
+  border-radius: 5px;
+  overflow: hidden;
+  padding-left: 0.8em;
+  padding-right: 0.8em;
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  border: 1px solid #e3e3e3;
+}
+
+div.holowidgets {
+  padding-right: 0;
+  width: 25%;
+}
+
+div.holoslider {
+  min-height: 0 !important;
+  height: 0.8em;
+  width: 100%;
+}
+
+div.holoformgroup {
+  padding-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+div.hologroup {
+  padding-left: 0;
+  padding-right: 0.8em;
+  width: 100%;
+}
+
+.holoselect {
+  width: 92%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.holotext {
+  padding-left:  0.5em;
+  padding-right: 0;
+  width: 100%;
+}
+
+.holowidgets .ui-resizable-se {
+  visibility: hidden
+}
+
+.holoframe > .ui-resizable-se {
+  visibility: hidden
+}
+
+.holowidgets .ui-resizable-s {
+  visibility: hidden
+}
+
+
+/* CSS rules for noUISlider based slider used by JupyterLab extension  */
+
+.noUi-handle {
+  width: 20px !important;
+  height: 20px !important;
+  left: -5px !important;
+  top: -5px !important;
+}
+
+.noUi-handle:before, .noUi-handle:after {
+  visibility: hidden;
+  height: 0px;
+}
+
+.noUi-target {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+}
+
+div.bk-hbox {
+    display: flex;
+    justify-content: center;
+}
+
+div.bk-hbox div.bk-plot {
+    padding: 8px;
+}
+
+div.bk-hbox div.bk-data-table {
+    padding: 20px;
+}
+</style><div style='display: table; margin: 0 auto;'>
+
+<div class="bk-root">
+    <div class="bk-plotdiv" id="6ecbc36d-9662-4ba7-97ad-92500e6d4b30"></div>
+</div>
+<script type="text/javascript">
+  (function(root) {
+  function embed_document(root) {
+    
+  var docs_json = {"8829b9b7-8ea0-40f4-8dd7-e2f3b03a11dc":{"roots":{"references":[{"attributes":{},"id":"4b7ed21d-3ff8-4504-9023-81752ee5bea3","type":"BasicTickFormatter"},{"attributes":{"axis_label":"y","bounds":"auto","formatter":{"id":"4b7ed21d-3ff8-4504-9023-81752ee5bea3","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"1eafa000-cc7d-44df-88fd-aabc5f262a44","subtype":"Figure","type":"Plot"},"ticker":{"id":"81d8e930-2eff-4da6-8252-7a2ba5c5954d","type":"BasicTicker"},"visible":false},"id":"90e42247-bdeb-4277-b81b-e7c78582c507","type":"LinearAxis"},{"attributes":{"fill_color":{"value":"limegreen"},"size":{"units":"screen","value":15}},"id":"9a9554ba-1572-4a35-98b4-6963c70ef89b","type":"Circle"},{"attributes":{"axis_label":"x","bounds":"auto","formatter":{"id":"8cf83bb9-4e8d-4f40-92ae-792c65140bc0","type":"BasicTickFormatter"},"major_label_orientation":"horizontal","plot":{"id":"1eafa000-cc7d-44df-88fd-aabc5f262a44","subtype":"Figure","type":"Plot"},"ticker":{"id":"d9dc7bb2-1f93-47ab-8c4d-b4e65cd85035","type":"BasicTicker"},"visible":false},"id":"951c7fdf-0443-4c3d-8b31-a337a6351f4d","type":"LinearAxis"},{"attributes":{"callback":null,"end":1.05,"start":-0.05},"id":"23e40e8a-4b6c-44bf-a4ea-fb886a02118e","type":"Range1d"},{"attributes":{"line_width":{"value":2}},"id":"6b73de6d-5faf-4555-b4c6-1d5d0875a5fc","type":"MultiLine"},{"attributes":{"overlay":{"id":"71ad21e6-4291-4a02-9a0a-50e94cf73e45","type":"BoxAnnotation"}},"id":"2d71354d-3bc8-4b15-98e2-9a01f89cd1a6","type":"BoxZoomTool"},{"attributes":{},"id":"b8537a1c-324a-4cae-9ae7-6e726f62b08a","type":"WheelZoomTool"},{"attributes":{"fill_alpha":{"value":0.2},"fill_color":{"value":"#30a2da"},"line_alpha":{"value":0.2},"size":{"units":"screen","value":15}},"id":"57e8cbfc-f95a-4420-a610-d501a55598aa","type":"Circle"},{"attributes":{"graph_layout":{"0":[-0.09304971414754347,-0.16203191998693006],"1":[0.12159213648897205,-0.1841469980687371],"10":[-1.904983880461696,0.38334163820056716],"100":[-0.117844481210993,-0.049128244979722374],"101":[0.5811769912589185,-0.08755661165049715],"102":[1.834517272303664,-0.25194840687664627],"103":[-1.4673828217055735,-0.8628015303312551],"104":[0.07159848322425998,0.01945093785781747],"105":[-0.024916357883221052,-0.08859466656023268],"106":[-0.7879565037511137,-1.9179201429020913],"107":[0.12301417594757096,-0.12711207834374683],"108":[-1.1379662480441877,-1.3310913445818047],"109":[0.22790779219478002,-0.3803204782597237],"11":[0.4816679639628228,1.172712045231121],"110":[-1.57799560002659,-0.8395148024381629],"111":[-1.838345566478257,-0.04411687701228821],"112":[0.1776301877234688,-0.29634233524920806],"113":[0.06005930506736417,-0.04688495909571274],"114":[0.0978443787789601,-0.147291257675341],"115":[0.7652784579919798,-1.6452269424583124],"116":[0.44773627169486757,-0.11559126665908254],"117":[-0.043787153397041534,-0.4914526753273108],"118":[-0.8707128811314049,1.4622785971034034],"119":[-0.08193946443585749,1.884507494271511],"12":[-1.9543018270123773,0.4129521788734552],"120":[0.16126081050249555,-0.4549724206853682],"121":[-1.163086760398012,0.6100140263301276],"122":[-0.14927048549918195,-0.3686769167609716],"123":[0.03317368653238815,-0.7921112232514829],"124":[0.14468877278395045,-0.29352054898930424],"125":[0.02305944002246006,-0.0643078139873435],"126":[0.3664315188823762,-0.3320673217416554],"127":[0.9198555781437884,1.2223286891003817],"128":[-1.2046833285067386,-1.0653946338736162],"129":[-0.9772316215303569,0.7210546989663196],"13":[0.42815892553468055,-0.15765959661774942],"130":[0.0786399558415676,-0.45171940636936625],"131":[-1.7661040011164095,0.5115612834906098],"132":[2.0,-0.5713630966121054],"133":[0.023389267641970645,-0.12255622381501984],"134":[-0.21772761641003108,-0.15846517000138308],"135":[-0.03877103238173745,0.07755288746873468],"136":[0.293331626233945,1.421763973045473],"137":[-0.1235842786128697,-0.10314010965854056],"138":[0.7940193147445642,-0.044610005633761246],"139":[-1.5635211593406768,0.7988084943647297],"14":[0.28198498859869214,-0.3359978313191913],"140":[-0.06612978127324164,-0.19653961840631018],"141":[-1.547640328418242,-0.3555024138008727],"142":[0.65325921775921,1.1138135736891774],"143":[1.9035971349301066,-0.5905285364439028],"144":[-1.1754790778292414,-1.2922831554971337],"145":[0.2533260370789153,1.4595020081544574],"146":[-0.04615394013569875,0.21796321531359394],"147":[-1.7916310265447142,-0.01669723513767675],"148":[0.03494559043161204,0.02466854014173345],"149":[-0.18416802407147856,-0.3587814864733076],"15":[-0.8323931842041872,1.3542341489832281],"150":[0.1565654734121892,-0.16721220092997702],"151":[0.779298260667464,0.010215020335499593],"152":[-0.04851785332516692,1.9278630716849217],"153":[0.4599878312151389,-0.6873238940194346],"154":[0.04510011711312936,-1.898886328140968],"16":[0.42078356425421776,-0.03162498887421686],"17":[1.487032320730295,-1.1471596485735829],"18":[0.14579696954740884,-0.3430549155528552],"19":[0.06503968346250306,-0.18652694868374933],"2":[1.6381893741359035,1.122025251112988],"20":[-0.17286140468425437,0.01722293666020119],"21":[0.6793851013826929,1.5520504574357201],"22":[0.22810024992439823,-0.07532728857272154],"23":[-1.04585238739125,1.0729361728464648],"24":[0.03818357293003615,-0.09749734616626667],"25":[-1.647406282187383,-0.3782922036993937],"26":[-1.1540023389365794,-1.0453301465824512],"27":[-1.2365121836046582,1.0022911919289135],"28":[0.3792642669783699,-0.7431617823163967],"29":[0.3349372335808882,0.09697600007748126],"3":[0.0798740276563562,0.11179112124275892],"30":[-1.1139656750885236,1.0653765604654033],"31":[0.08314734583575803,-1.8319896235305622],"32":[1.4097209293361102,-1.0797928434538662],"33":[0.466217191976623,1.2614439944719678],"34":[0.2943848912015836,-0.09347876111155864],"35":[0.1400661427014326,0.2531471671600082],"36":[0.08117634451839897,-0.10714303641062356],"37":[1.871363292776856,0.21074968258152327],"38":[0.3696634187106583,-0.2913623065733287],"39":[0.43515743432532494,-0.277365636127999],"4":[-0.25223340985382703,0.18814333295125232],"40":[0.04194827816824563,-1.826222033807931],"41":[0.761091861686537,-1.6994635804561316],"42":[-1.4893805580982218,0.7846694394604815],"43":[-0.28350736224773626,0.3174908667436893],"44":[-0.19019688138827598,-0.3163931628704482],"45":[1.640337783806585,1.0678332523504213],"46":[0.592361360881405,1.1255965895839293],"47":[1.9199008755538183,-0.5497533697859927],"48":[0.025865583420411526,-0.3590344117724148],"49":[0.05320935295318375,-0.6526963776736188],"5":[0.36079862131970325,-0.5862947659895531],"50":[0.2284378190801896,-0.25793886028040675],"51":[-0.3277382622410269,0.19966821564782508],"52":[-1.5744272624923072,-1.164335802572027],"53":[-0.8813072078708089,1.419805911781136],"54":[-0.03992776334243828,-0.28074047891994547],"55":[0.6978259175732702,1.1084914632569272],"56":[-0.44955729516778004,0.2439586671410303],"57":[1.9219964151564326,-0.5123807355477231],"58":[-1.5080492077227063,0.7421360520675626],"59":[-0.17217888513826193,-0.05880886219321164],"6":[0.6688116224321194,1.1595375320895471],"60":[0.42524802979489634,-0.07590212548817715],"61":[-0.22234171313169598,-0.12550311305944237],"62":[0.24662065891783935,-0.020311074415591126],"63":[0.3142385493214046,1.6152751265650567],"64":[0.11597558206483151,-0.29801818121217666],"65":[-0.38371762859668657,0.31958981862283425],"66":[0.7274293240464494,1.656517989280006],"67":[0.6614677401777013,-0.04865316119400228],"68":[-1.025046502285431,0.670251295552607],"69":[0.22862451922317853,-0.4419821639782937],"7":[1.754917049238186,-0.2510160495658817],"70":[1.8598475098694167,0.5110584290771945],"71":[0.08575142291327345,0.05675602487839573],"72":[0.022549270286558034,0.18610170189191663],"73":[-0.11449745178753365,-0.6229072649346238],"74":[-0.26760256298733165,-0.5125029791471755],"75":[-0.7597442506479626,-1.8462821228161712],"76":[0.3228543829609297,1.7256624861787602],"77":[0.08539623188381983,-1.8884385194287803],"78":[0.047511315467502896,-0.26098908686214867],"79":[-1.4749698090293242,-0.8039885546797482],"8":[0.8705730449795096,1.173364600784675],"80":[0.014102845547186353,0.045725999918284056],"81":[-0.16369963198316662,-0.40757977148278324],"82":[1.8417273937997145,0.5615198046627736],"83":[0.32038805781553037,-0.6181589225601262],"84":[0.1907808455517523,-0.3942524754507914],"85":[0.42680978593644875,1.2379253917145379],"86":[-1.1728194041688196,1.0227691964937868],"87":[0.7883177589420644,1.1424442816694154],"88":[-1.0924697041349476,0.629566693369449],"89":[0.007568691257299668,-0.1795123268226834],"9":[0.6202347424763269,1.2274149369402183],"90":[-0.4244275922894965,0.2899773736834473],"91":[-1.6834722704533251,0.4829358928384766],"92":[0.25575838946752993,-0.32399784719360314],"93":[0.09687039844813214,-0.5341325622788443],"94":[1.975753016114729,0.22251650322522656],"95":[-1.6278089799523716,-1.1519506500293497],"96":[0.06848637284647778,-0.6047837310303898],"97":[-0.0816009466888821,-0.030395614592693573],"98":[0.10643672055754053,-0.08601696349251345],"99":[-0.03580664773536485,-0.23746602257293595]}},"id":"2d249746-0253-4fcc-a4d5-37c4355d505f","type":"StaticLayoutProvider"},{"attributes":{"line_color":{"value":"limegreen"},"line_width":{"value":2}},"id":"e6d272dc-c1e4-460e-9ddd-807f01dc96b8","type":"MultiLine"},{"attributes":{},"id":"220a116e-c18d-41ba-9322-4132596c8bcc","type":"NodesAndLinkedEdges"},{"attributes":{"bottom_units":"screen","fill_alpha":{"value":0.5},"fill_color":{"value":"lightgrey"},"left_units":"screen","level":"overlay","line_alpha":{"value":1.0},"line_color":{"value":"black"},"line_dash":[4,4],"line_width":{"value":2},"plot":null,"render_mode":"css","right_units":"screen","top_units":"screen"},"id":"71ad21e6-4291-4a02-9a0a-50e94cf73e45","type":"BoxAnnotation"},{"attributes":{},"id":"81d8e930-2eff-4da6-8252-7a2ba5c5954d","type":"BasicTicker"},{"attributes":{},"id":"d9dc7bb2-1f93-47ab-8c4d-b4e65cd85035","type":"BasicTicker"},{"attributes":{"plot":null,"text":"","text_color":{"value":"black"},"text_font_size":{"value":"12pt"}},"id":"1d6af919-c815-47e2-aa5d-c753c25af3a3","type":"Title"},{"attributes":{"edge_renderer":{"id":"8bbccfa4-8425-4ed4-b3d9-d0e02fb1f1da","type":"GlyphRenderer"},"inspection_policy":{"id":"3e52aace-c86c-438c-81db-6172607b4a46","type":"NodesAndLinkedEdges"},"layout_provider":{"id":"2d249746-0253-4fcc-a4d5-37c4355d505f","type":"StaticLayoutProvider"},"node_renderer":{"id":"f8d7efd3-8f5b-45ea-aa84-ec8c576fa184","type":"GlyphRenderer"},"selection_policy":{"id":"220a116e-c18d-41ba-9322-4132596c8bcc","type":"NodesAndLinkedEdges"}},"id":"a7971995-9d69-4789-a88c-7ee31a0dd999","type":"GraphRenderer"},{"attributes":{"fill_color":{"value":"#30a2da"},"size":{"units":"screen","value":15}},"id":"c66efece-b6c6-4b61-82e7-7f17a01a398a","type":"Circle"},{"attributes":{},"id":"b265225f-ed2f-4652-9b48-0bccb4402d7e","type":"LinearScale"},{"attributes":{},"id":"6dde23b0-e892-4e6b-83c9-9cc67de57c17","type":"PanTool"},{"attributes":{},"id":"3e52aace-c86c-438c-81db-6172607b4a46","type":"NodesAndLinkedEdges"},{"attributes":{"line_alpha":{"value":0.2},"line_width":{"value":2}},"id":"7b03cf92-c82a-48ce-b273-8e357eb54172","type":"MultiLine"},{"attributes":{},"id":"56151e44-b264-40fe-acee-32a39a6c322f","type":"ResetTool"},{"attributes":{"grid_line_color":{"value":null},"plot":{"id":"1eafa000-cc7d-44df-88fd-aabc5f262a44","subtype":"Figure","type":"Plot"},"ticker":{"id":"d9dc7bb2-1f93-47ab-8c4d-b4e65cd85035","type":"BasicTicker"}},"id":"63ccdf10-237e-40ab-bd54-b3e307dba350","type":"Grid"},{"attributes":{"callback":null,"renderers":[{"id":"a7971995-9d69-4789-a88c-7ee31a0dd999","type":"GraphRenderer"}],"tooltips":[["index","@{index_hover}"]]},"id":"57bfb846-6f4d-4b64-b30d-76135b452b88","type":"HoverTool"},{"attributes":{},"id":"e6d639ec-5940-4ad2-9a6d-f1e0753a8cad","type":"LinearScale"},{"attributes":{"below":[{"id":"951c7fdf-0443-4c3d-8b31-a337a6351f4d","type":"LinearAxis"}],"left":[{"id":"90e42247-bdeb-4277-b81b-e7c78582c507","type":"LinearAxis"}],"min_border_bottom":10,"min_border_left":10,"min_border_right":10,"min_border_top":10,"plot_height":800,"plot_width":1000,"renderers":[{"id":"951c7fdf-0443-4c3d-8b31-a337a6351f4d","type":"LinearAxis"},{"id":"63ccdf10-237e-40ab-bd54-b3e307dba350","type":"Grid"},{"id":"90e42247-bdeb-4277-b81b-e7c78582c507","type":"LinearAxis"},{"id":"a36061c8-58b4-467c-a159-a23744b3557f","type":"Grid"},{"id":"71ad21e6-4291-4a02-9a0a-50e94cf73e45","type":"BoxAnnotation"},{"id":"a7971995-9d69-4789-a88c-7ee31a0dd999","type":"GraphRenderer"}],"title":{"id":"1d6af919-c815-47e2-aa5d-c753c25af3a3","type":"Title"},"toolbar":{"id":"dcbf5b12-d4b0-46e0-860e-0e1198548f51","type":"Toolbar"},"x_range":{"id":"42a72236-31c3-4740-8a35-a8b9f52a9c89","type":"Range1d"},"x_scale":{"id":"e6d639ec-5940-4ad2-9a6d-f1e0753a8cad","type":"LinearScale"},"y_range":{"id":"23e40e8a-4b6c-44bf-a4ea-fb886a02118e","type":"Range1d"},"y_scale":{"id":"b265225f-ed2f-4652-9b48-0bccb4402d7e","type":"LinearScale"}},"id":"1eafa000-cc7d-44df-88fd-aabc5f262a44","subtype":"Figure","type":"Plot"},{"attributes":{"data_source":{"id":"dc55e530-b9d0-47dd-9220-f9577abca5b8","type":"ColumnDataSource"},"glyph":{"id":"6b73de6d-5faf-4555-b4c6-1d5d0875a5fc","type":"MultiLine"},"hover_glyph":{"id":"e6d272dc-c1e4-460e-9ddd-807f01dc96b8","type":"MultiLine"},"muted_glyph":null,"nonselection_glyph":{"id":"7b03cf92-c82a-48ce-b273-8e357eb54172","type":"MultiLine"},"selection_glyph":null,"view":{"id":"38a6d639-9dd8-4062-808b-9e12c7743ef0","type":"CDSView"}},"id":"8bbccfa4-8425-4ed4-b3d9-d0e02fb1f1da","type":"GlyphRenderer"},{"attributes":{"callback":null,"end":1.05,"start":-0.05},"id":"42a72236-31c3-4740-8a35-a8b9f52a9c89","type":"Range1d"},{"attributes":{"source":{"id":"187dce1c-01d5-4203-ae7c-2d6e2d53cd4e","type":"ColumnDataSource"}},"id":"232a7ce3-e173-48c6-90c2-4d5444785f10","type":"CDSView"},{"attributes":{"callback":null,"column_names":["index_hover","index"],"data":{"index":{"__ndarray__":"AAAAAAEAAAACAAAAAwAAAAQAAAAFAAAABgAAAAcAAAAIAAAACQAAAAoAAAALAAAADAAAAA0AAAAOAAAADwAAABAAAAARAAAAEgAAABMAAAAUAAAAFQAAABYAAAAXAAAAGAAAABkAAAAaAAAAGwAAABwAAAAdAAAAHgAAAB8AAAAgAAAAIQAAACIAAAAjAAAAJAAAACUAAAAmAAAAJwAAACgAAAApAAAAKgAAACsAAAAsAAAALQAAAC4AAAAvAAAAMAAAADEAAAAyAAAAMwAAADQAAAA1AAAANgAAADcAAAA4AAAAOQAAADoAAAA7AAAAPAAAAD0AAAA+AAAAPwAAAEAAAABBAAAAQgAAAEMAAABEAAAARQAAAEYAAABHAAAASAAAAEkAAABKAAAASwAAAEwAAABNAAAATgAAAE8AAABQAAAAUQAAAFIAAABTAAAAVAAAAFUAAABWAAAAVwAAAFgAAABZAAAAWgAAAFsAAABcAAAAXQAAAF4AAABfAAAAYAAAAGEAAABiAAAAYwAAAGQAAABlAAAAZgAAAGcAAABoAAAAaQAAAGoAAABrAAAAbAAAAG0AAABuAAAAbwAAAHAAAABxAAAAcgAAAHMAAAB0AAAAdQAAAHYAAAB3AAAAeAAAAHkAAAB6AAAAewAAAHwAAAB9AAAAfgAAAH8AAACAAAAAgQAAAIIAAACDAAAAhAAAAIUAAACGAAAAhwAAAIgAAACJAAAAigAAAIsAAACMAAAAjQAAAI4AAACPAAAAkAAAAJEAAACSAAAAkwAAAJQAAACVAAAAlgAAAJcAAACYAAAAmQAAAJoAAAA=","dtype":"int32","shape":[155]},"index_hover":["2 CHAINZ","21 SAVAGE","99 PERCENT","A BOOGIE WIT DA HOODIE","A$AP ROCKY","ALESSIA CARA","ALESSO","ARIANA GRANDE","AYO","BACKSTREET BOYS","BAD BUNNY","BEBE REXHA","BECKY G","BEYONCE","BIG SEAN","BRENT FAIYAZ","BRYSON TILLER","BTS","CALVIN HARRIS","CAMILA CABELLO","CARDI B","CARRIE UNDERWOOD","CHANCE THE RAPPER","CHEAT CODES","CHRIS BROWN","CHRIS YOUNG","COLDPLAY","DADDY YANKEE","DAMIAN LEMAR HUDSON","DAVID GUETTA","DEMI LOVATO","DESCEMER BUENO","DESIIGNER","DIGITAL FARM ANIMALS","DJ KHALED","DJ SPINKING","DRAKE","DUA LIPA","ED SHEERAN","EMINEM","ENRIQUE IGLESIAS","ERIC CHURCH","ERIKA COSTELL","FAMOUS DEX","FIFTH HARMONY","FLO RIDA","FLORIDA GEORGIA LINE","FLUME","FRANK OCEAN","FRENCH MONTANA","FUTURE","G-EAZY","GNASH","GOLDLINK","GUCCI MANE","HAILEE STEINFELD","HALSEY","J BALVIN","JAKE PAUL","JASON DERULO","JAY Z","JHENE AIKO","JUSTIN BIEBER","KANE BROWN","KATY PERRY","KEHLANI","KEITH URBAN","KENDRICK LAMAR","KESHA","KHALID","KIIARA","KODAK BL","KODAK BLACK","KYGO","KYLE","LABRINTH","LAUREN ALAINA","LENNOX","LIAM PAYNE","LIL UZI VERT","LIL WAYNE","LIL YACHTY","LINKIN PARK","LOGIC","LORDE","LOUIS TOMLINSON","LUIS FONSI","MACHINE GUN KELLY","MACKLEMORE","MAJOR LAZER","MARC E. BASSY","MAREN MORRIS","MAROON 5","MARSHMELLO","MARTIN GARRIX","MAX","MAX B","MEEK MILL","METRO BOOMIN","MIGOS","MIGUEL","N*E*R*D","NATURE","NAV","NICK JONAS","NICKI MINAJ","NOAH CYRUS","OFFSET","OZUNA","PHARRELL WILLIAMS","PLAYBOI CARTI","PNB ROCK","POST MALONE","QUALITY CONTROL","QUAVO","RHIANNON GIDDENS","RIHANNA","SELENA GOMEZ","SHY GLIZZY","SIA","SKIP MARLEY","SKYLAR GREY","SLIM JXMMI","SWAE LEE","SZA","TAKEOFF","TAYLOR SWIFT","TEO","THE CHAINSMOKERS","THE DAP-KINGS HORNS","THE WEEKND","THOMAS RHETT","TOVE LO","TRAVIS SCOTT","TREY SONGZ","TRIPPIE REDD","TY DOLA $IGN","TY DOLLA $IGN","U2","UNCLE KADE","USHER","VINCE GILL","WATT","WILLY WILLIAM","WISIN","WIZ KHALIFA","XXXTENTACION","YFN LUCCI","YO GOTTI","YOUNG DOLPH","YOUNG THUG","ZACARI","ZAYN","ZEDD","ZION"]},"selected":null,"selection_policy":null},"id":"187dce1c-01d5-4203-ae7c-2d6e2d53cd4e","type":"ColumnDataSource"},{"attributes":{},"id":"8cf83bb9-4e8d-4f40-92ae-792c65140bc0","type":"BasicTickFormatter"},{"attributes":{"active_drag":"auto","active_inspect":"auto","active_scroll":"auto","active_tap":"auto","tools":[{"id":"57bfb846-6f4d-4b64-b30d-76135b452b88","type":"HoverTool"},{"id":"25a39d1e-d32d-4181-a7dd-042f5bedaaf8","type":"SaveTool"},{"id":"6dde23b0-e892-4e6b-83c9-9cc67de57c17","type":"PanTool"},{"id":"b8537a1c-324a-4cae-9ae7-6e726f62b08a","type":"WheelZoomTool"},{"id":"2d71354d-3bc8-4b15-98e2-9a01f89cd1a6","type":"BoxZoomTool"},{"id":"56151e44-b264-40fe-acee-32a39a6c322f","type":"ResetTool"},{"id":"65844395-55ef-4fa5-9639-8fda2bed5395","type":"TapTool"}]},"id":"dcbf5b12-d4b0-46e0-860e-0e1198548f51","type":"Toolbar"},{"attributes":{"source":{"id":"dc55e530-b9d0-47dd-9220-f9577abca5b8","type":"ColumnDataSource"}},"id":"38a6d639-9dd8-4062-808b-9e12c7743ef0","type":"CDSView"},{"attributes":{"callback":null,"column_names":["start","end"],"data":{"end":{"__ndarray__":"aQAAAEgAAAAkAAAAjgAAAFcAAAAGAAAALgAAAHUAAABrAAAAcAAAAGIAAACFAAAAcgAAAEsAAABEAAAADQAAAA4AAABEAAAAeQAAADYAAACYAAAAhQAAAJIAAABbAAAAMQAAAIIAAAAoAAAAmgAAAB8AAABvAAAAAgAAABYAAAAiAAAAHQAAAHIAAAA1AAAAdgAAACIAAAByAAAAIQAAAAsAAACZAAAAUwAAAEUAAAB/AAAAQgAAAAcAAAADAAAAkgAAAHsAAACCAAAABgAAAC4AAABsAAAAJQAAAGcAAABuAAAANAAAAHIAAAAQAAAADQAAACQAAAB0AAAAPAAAAHIAAAAkAAAAhQAAAGsAAACWAAAARQAAAHQAAAASAAAAggAAAFwAAABrAAAAGAAAACYAAAB+AAAAjwAAACgAAACaAAAAaQAAAC8AAAAzAAAAIwAAAJQAAABHAAAAGAAAAEMAAAAQAAAAZQAAAEMAAAASAAAAQAAAAG0AAAANAAAAMwAAABoAAABFAAAAcAAAAFwAAACFAAAAVAAAAEAAAABjAAAARQAAADAAAABtAAAANgAAAEUAAABwAAAAJgAAAJcAAAAKAAAAiQAAAGkAAACNAAAAhQAAAHIAAABpAAAAawAAADYAAABwAAAAUwAAAF0AAABGAAAAYwAAAIUAAAByAAAAcQAAAJYAAAB9AAAAXQAAADYAAAAzAAAAIAAAABcAAABWAAAANQAAAJUAAAByAAAAAAAAABgAAACMAAAAYwAAAHoAAACGAAAAaQAAAAAAAAAYAAAAYQAAAD0AAACaAAAAaQAAAEcAAAAYAAAAFAAAACsAAAAzAAAAQAAAACkAAAAhAAAALgAAAGkAAABjAAAAeAAAACoAAAA6AAAAUQAAAFEAAABpAAAAFAAAAJUAAACRAAAACQAAAAYAAAAUAAAAcQAAAHIAAAByAAAAGAAAABgAAACGAAAAhQAAAHIAAAA9AAAATAAAABMAAACFAAAAcgAAADoAAABWAAAAHAAAADMAAAATAAAAcgAAAGQAAAAYAAAAEwAAABgAAAByAAAAcgAAAD0AAABwAAAA","dtype":"int32","shape":[204]},"start":{"__ndarray__":"UAAAAFAAAABQAAAANwAAADcAAAA3AAAANwAAAEkAAAABAAAAAQAAAAEAAAABAAAAAQAAAGoAAACBAAAAJwAAACcAAABYAAAAWAAAACwAAAB3AAAAhwAAAIcAAACDAAAAYAAAAGAAAABNAAAATQAAAE0AAACTAAAALQAAAD4AAAA+AAAAPgAAAD4AAAAPAAAADwAAABYAAAAWAAAAVQAAAFUAAAAFAAAABQAAAAUAAAAIAAAAFQAAAGYAAABIAAAASAAAADEAAAAxAAAAjgAAAI4AAACQAAAAXgAAAE8AAABPAAAAXwAAACIAAAAiAAAAIgAAACIAAAAiAAAAIgAAAGIAAABiAAAAYgAAAGIAAAAyAAAAMgAAADIAAAAyAAAAMgAAADIAAAAyAAAAMgAAADIAAAAyAAAAOQAAAB8AAAAfAAAAaAAAAIQAAABBAAAAAwAAAAMAAAADAAAAAwAAAIoAAAB0AAAAdAAAAHQAAAAOAAAADgAAAA4AAAA8AAAAWgAAAIAAAAB8AAAAfAAAAHwAAAB8AAAAfAAAABIAAAASAAAAEgAAABIAAAASAAAAggAAAFQAAABUAAAAfgAAAEMAAAAMAAAAOwAAADsAAAAZAAAAJAAAACQAAAAkAAAAJAAAACQAAABFAAAARQAAAEUAAABSAAAAMAAAAGsAAABrAAAAawAAAGsAAABrAAAAdQAAAHUAAAA4AAAAEQAAAB4AAAAeAAAAdgAAADYAAAA2AAAANgAAADYAAAA2AAAANgAAADYAAACJAAAAiQAAAIkAAACJAAAAiQAAAIkAAAAoAAAAlAAAAJQAAACUAAAABAAAAAQAAAAEAAAAbQAAAHMAAAALAAAACwAAAEAAAABAAAAAQAAAAIsAAACLAAAASgAAAGMAAABjAAAAYwAAAHoAAACIAAAALgAAAC4AAABpAAAAfQAAAH0AAABxAAAAYQAAAEcAAAAAAAAAAAAAAAAAAAAAAAAAPwAAAFkAAABZAAAAWQAAACoAAAAbAAAAUwAAABQAAACFAAAAhQAAAIUAAACWAAAAlgAAAIwAAAATAAAATgAAAIYAAAByAAAA","dtype":"int32","shape":[204]}},"selected":null,"selection_policy":null},"id":"dc55e530-b9d0-47dd-9220-f9577abca5b8","type":"ColumnDataSource"},{"attributes":{"dimension":1,"grid_line_color":{"value":null},"plot":{"id":"1eafa000-cc7d-44df-88fd-aabc5f262a44","subtype":"Figure","type":"Plot"},"ticker":{"id":"81d8e930-2eff-4da6-8252-7a2ba5c5954d","type":"BasicTicker"}},"id":"a36061c8-58b4-467c-a159-a23744b3557f","type":"Grid"},{"attributes":{"data_source":{"id":"187dce1c-01d5-4203-ae7c-2d6e2d53cd4e","type":"ColumnDataSource"},"glyph":{"id":"c66efece-b6c6-4b61-82e7-7f17a01a398a","type":"Circle"},"hover_glyph":{"id":"9a9554ba-1572-4a35-98b4-6963c70ef89b","type":"Circle"},"muted_glyph":null,"nonselection_glyph":{"id":"57e8cbfc-f95a-4420-a610-d501a55598aa","type":"Circle"},"selection_glyph":null,"view":{"id":"232a7ce3-e173-48c6-90c2-4d5444785f10","type":"CDSView"}},"id":"f8d7efd3-8f5b-45ea-aa84-ec8c576fa184","type":"GlyphRenderer"},{"attributes":{"callback":null},"id":"65844395-55ef-4fa5-9639-8fda2bed5395","type":"TapTool"},{"attributes":{},"id":"25a39d1e-d32d-4181-a7dd-042f5bedaaf8","type":"SaveTool"}],"root_ids":["1eafa000-cc7d-44df-88fd-aabc5f262a44"]},"title":"Bokeh Application","version":"0.12.15"}};
+  var render_items = [{"docid":"8829b9b7-8ea0-40f4-8dd7-e2f3b03a11dc","elementid":"6ecbc36d-9662-4ba7-97ad-92500e6d4b30","modelid":"1eafa000-cc7d-44df-88fd-aabc5f262a44"}];
+  root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    var attempts = 0;
+    var timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        embed_document(root);
+        clearInterval(timer);
+      }
+      attempts++;
+      if (attempts > 100) {
+        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+        clearInterval(timer);
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
+</div>
