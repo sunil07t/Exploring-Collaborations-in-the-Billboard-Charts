@@ -135,9 +135,8 @@ top= []
 for a in sorted(G.degree, key=lambda x: x[1], reverse=True)[:1000]:
     top.append(a[0])
 
-def print_top_100():
-    top_100 = top[100:]    
-    for a in top_100:
+def print_top_100():   
+    for a in top[:100]:
         print(str(top.index(a) + 1) + ': ' +mean_artist(a))
 
 top_cycles = []
@@ -169,11 +168,12 @@ def find_longest_cycle():
             index = i
         i += 1
         
-    print(win, index, top[index])
+    return(win, index, top[index])
 
-#This is the longest cycle, index taken from output    
-longest_cycle = max_cycle(top_cycles[684])
+#This is the longest cycle we could find
+cycle_here = find_longest_cycle()[1]   
+longest_cycle = max_cycle(top_cycles[cycle_here])
 
-print('The longest cycle has ' + str(len(longest_cycle)) + ' nodes and has the root ' + str(top[684]))
+print('The longest cycle has ' + str(len(longest_cycle)))
 print('The most collaboritive artist is ' + str(most_collaboritive_artist(G)[0]) + ' with ' + str(most_collaboritive_artist(G)[1]))
 print('The most collaboritive of 2017 is ' + str(most_collaboritive_artist(G_2017)[0]) + ' with ' + str(most_collaboritive_artist(G_2017)[1]))
