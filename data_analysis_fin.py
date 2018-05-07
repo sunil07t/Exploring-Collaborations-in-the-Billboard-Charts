@@ -205,6 +205,11 @@ def find_longest_cycle():
         
     return [win, index, top[index]]
 
-print('The longest cycle has ' + str(find_longest_cycle()[0]) + ' nodes and has the root ' + str(find_longest_cycle()[2]))
+#This is the longest cycle we could find
+cycle_here = find_longest_cycle()[1]   
+longest_cycle = max_cycle(top_cycles[cycle_here])
+
+print('The longest cycle has ' + str(len(longest_cycle)))
 print('The most collaboritive artist is ' + str(most_collaboritive_artist(G)[0]) + ' with ' + str(most_collaboritive_artist(G)[1]))
 print('The most collaboritive of 2017 is ' + str(most_collaboritive_artist(G_2017)[0]) + ' with ' + str(most_collaboritive_artist(G_2017)[1]))
+
