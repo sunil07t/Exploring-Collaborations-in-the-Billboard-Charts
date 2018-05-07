@@ -14,7 +14,6 @@ from collections import Counter
 df = pd.read_csv('top_100_50_years.csv')
 
 SPLIT_STRING = ' and |, | AND | & | featuring | FEATURING | x | X | feat | ft |,| with | feauring | feat. | / '
-#SPLIT_STRING = ', | / | with | & | featuring | FEATURING | x | X | feat | feat.'
 
 lst = [1, 2, 3, 4, 5]
 def song_artist_combi(lst):
@@ -27,7 +26,6 @@ def song_artist_combi(lst):
     return colabs
 
 
-# split on ", " " and " " AND " " & " " featuring " " FEATURING " " x " " X "
 def separate_artists(all_artists):
     ret_list = []
     for colab in all_artists:
@@ -125,7 +123,7 @@ for date in range(1967, 2019):
     
 winner = max(colabs_by_year, key=colabs_by_year.get)
 
-print 'The year with the highest number of collabs is ' + str(winner) + ' with ' + str(colabs_by_year[winner])
+#print 'The year with the highest number of collabs is ' + str(winner) + ' with ' + str(colabs_by_year[winner])
 
 #Looking for the most collaboritive artist in a year
 df2 = df[df.Year.str.contains('2017')]
@@ -208,7 +206,7 @@ def find_longest_cycle():
 cycle_here = find_longest_cycle()[1]   
 longest_cycle = max_cycle(top_cycles[cycle_here])
 
-print('The longest cycle has ' + str(len(longest_cycle)))
-print('The most collaboritive artist is ' + str(most_collaboritive_artist(G)[0]) + ' with ' + str(most_collaboritive_artist(G)[1]))
-print('The most collaboritive of 2017 is ' + str(most_collaboritive_artist(G_2017)[0]) + ' with ' + str(most_collaboritive_artist(G_2017)[1]))
+#print('The longest cycle has ' + str(len(longest_cycle)))
+#print('The most collaboritive artist is ' + str(most_collaboritive_artist(G)[0]) + ' with ' + str(most_collaboritive_artist(G)[1]))
+#print('The most collaboritive of 2017 is ' + str(most_collaboritive_artist(G_2017)[0]) + ' with ' + str(most_collaboritive_artist(G_2017)[1]))
 
