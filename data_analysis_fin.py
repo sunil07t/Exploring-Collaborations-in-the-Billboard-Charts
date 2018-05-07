@@ -13,6 +13,9 @@ from collections import Counter
 
 df = pd.read_csv('top_100_50_years.csv')
 
+SPLIT_STRING = ' and |, | AND | & | featuring | FEATURING | x | X | feat | ft |,| with | feauring | feat. | / '
+#SPLIT_STRING = ', | / | with | & | featuring | FEATURING | x | X | feat | feat.'
+
 lst = [1, 2, 3, 4, 5]
 def song_artist_combi(lst):
     colabs = []
@@ -28,13 +31,26 @@ def song_artist_combi(lst):
 def separate_artists(all_artists):
     ret_list = []
     for colab in all_artists:
-        colabs = re.split(', | / | with | & | featuring | FEATURING | x | X | feat | feat.',colab)
+        colabs = re.split(SPLIT_STRING ,colab)
         ret_list.append(colabs)
     return ret_list
+
+def remove_dup_lil(all_artists):
+    all_artists_ret = []
+    for colab in all_artists:
+        colab_ret = []
+        for artist in colab:
+            filtered_artist = re.sub('LIL\' |LIL \' |LIL\'|LIL \'', 'LIL ', artist)
+            filtered_artist = re.sub(' or T.I.', '', filtered_artist)
+            filtered_artist = re.sub('-', ' ', filtered_artist)
+            colab_ret.append(filtered_artist)
+        all_artists_ret.append(colab_ret)
+    return all_artists_ret
 
 all_artists = df.Arists
 
 artists_separated = separate_artists(all_artists)
+artists_separated = remove_dup_lil(artists_separated)
 #print artists_separated
 
 edges_list = []
@@ -73,26 +89,48 @@ year = []
 
 for y in df['Date']:
     year.append(y[-4:])
-    
+        
 df['Year'] = year
 
-lil = df[df.Arists.str.contains('LIL\'') == True]
+def generate_edges(artists_separated):
+    edges_list = []
+    for colab in artists_separated:
+        edges_list.append(song_artist_combi(colab))
+    edges_tuples = [item for sublist in edges_list for item in sublist if type(item) == tuple]
+    edges_set = set(edges_tuples)
+    return list(edges_set)
 
-df2 = df[df.Arists.str.contains(', | / | with | & | featuring | FEATURING | x | X | feat | feat.') == True]
+def generate_nodes(edges):
+    nodes_set = set()
+    for colab in edges:
+        for artist in colab:
+            nodes_set.add(artist)
+    nodes = list(nodes_set)
+    return nodes
 
-df2.sort_values('Date', ascending = False)
-df2 = df2.drop_duplicates(['Song'])
+def generate_graph(nodes, edges):
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+    G.add_edges_from(edges)
+    return G
 
-year = df2.Year
+colabs_by_year = {}
+for date in range(1967, 2019):
+    artists_in_year = df[df['Year']== str(date)]['Arists']
+    year_artists_separated = separate_artists(artists_in_year)
+    year_edges = generate_edges(year_artists_separated)
+    year_nodes = generate_nodes(year_edges)
+    year_graph = generate_graph(year_nodes, year_edges)
+    colabs_by_year[date] = year_graph.number_of_edges()
+    
+winner = max(colabs_by_year, key=colabs_by_year.get)
 
-winner = Counter(year)
-
-print 'The year with the highest number of collabs is ' + str(winner.most_common(1)[0][0]) + ' with ' + str(winner.most_common(1)[0][1])
+print 'The year with the highest number of collabs is ' + str(winner) + ' with ' + str(colabs_by_year[winner])
 
 #Looking for the most collaboritive artist in a year
-df3 = df2[df2.Year.str.contains('2017')]
+df2 = df[df.Year.str.contains('2017')]
 
-artists_2017 = df3.Arists
+artists_2017 = df2.Arists
 
 separated_2017 = separate_artists(artists_2017)
 
@@ -125,12 +163,8 @@ def mean_artist(artist):
     return artist + ' -> Entry: ' + str(entry) + ', Peak: ' + str(peak) + ', Weeks: ' + str(weeks) 
     #eturn (entry, peak, weeks)
 
-#Combines two nodes
-G = nx.contracted_nodes(G, 'LIL WAYNE', 'LIL\' WAYNE')
-G = nx.contracted_nodes(G, 'LIL KIM', 'LIL\' KIM')
-#G = nx.contracted_nodes(G, 'LIL SUZY', 'LIL\' SUZY')
 
-#Top 10000 most collaboritive artists 
+#Top 1000 most collaboritive artists 
 top= []
 for a in sorted(G.degree, key=lambda x: x[1], reverse=True)[:1000]:
     top.append(a[0])
@@ -177,3 +211,4 @@ longest_cycle = max_cycle(top_cycles[cycle_here])
 print('The longest cycle has ' + str(len(longest_cycle)))
 print('The most collaboritive artist is ' + str(most_collaboritive_artist(G)[0]) + ' with ' + str(most_collaboritive_artist(G)[1]))
 print('The most collaboritive of 2017 is ' + str(most_collaboritive_artist(G_2017)[0]) + ' with ' + str(most_collaboritive_artist(G_2017)[1]))
+
