@@ -169,9 +169,8 @@ top= []
 for a in sorted(G.degree, key=lambda x: x[1], reverse=True)[:1000]:
     top.append(a[0])
 
-def print_top_100():
-    top_100 = top[100:]    
-    for a in top_100:
+def print_top_100():   
+    for a in top[:100]:
         print(str(top.index(a) + 1) + ': ' +mean_artist(a))
 
 top_cycles = []
@@ -203,7 +202,7 @@ def find_longest_cycle():
             index = i
         i += 1
         
-    return [win, index, top[index]]
+    return(win, index, top[index])
 
 #This is the longest cycle we could find
 cycle_here = find_longest_cycle()[1]   
