@@ -1,5 +1,5 @@
 **Inspiration**
-- Who is the most collaborative Billboard Charting musician in the past 50
+- Who is the most collaborative Billboard Chart musician in the past 50
 years?
 
 - Which year had the most collaborations?
